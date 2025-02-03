@@ -25,14 +25,14 @@ it_inventory_system\
 ├── print_accessorie.php        # Print page for accessories inventory. User can print the result from search and filter.\
 ├── print_network_equipmment.php      # Print page for network equipments inventory. User can print the result from search and filter.\
 ├── view_logs.php               # Activities like login, sign-up, logout, add, edit, delete and other will log. admin user able to view all activity record.\
-├── includes/\ 
-| (-)   ├── db.php                  # Database connection.\
-| (-)   ├── auth.php                # Authentication and session management.\
-| (-)   └── functions.php           # Utility functions (e.g., sorting).\
+├── includes/
+ (-)   ├── db.php                  # Database connection.\
+ (-)   ├── auth.php                # Authentication and session management.\
+ (-)   └── functions.php           # Utility functions (e.g., sorting).\
 ├── css/\
-| (-)   └── style.css               # Stylesheet for UI.\
+ (-)   └── style.css               # Stylesheet for UI.\
 ├── js/\
-| (-)   └── script.js               # Optional JavaScript for interactivity.\
+ (-)   └── script.js               # Optional JavaScript for interactivity.\
 ├── vendor/                     # Composer dependencies (e.g., PhpSpreadsheet).
 
 CRUD stands for:\
