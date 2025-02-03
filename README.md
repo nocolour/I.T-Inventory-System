@@ -33,7 +33,7 @@ it_inventory_system\
     └── style.css               # Stylesheet for UI.\
 ├── js/\
     └── script.js               # Optional JavaScript for interactivity.\
-├── vendor/\                     # Composer dependencies (e.g., PhpSpreadsheet).
+├── vendor/                     # Composer dependencies (e.g., PhpSpreadsheet).
 
 CRUD stands for:\
 ✅ C - Create (Add new records to a database)\
