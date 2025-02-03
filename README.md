@@ -1,8 +1,8 @@
 # I.T-Inventory-System
-I.T Inventory system with PHP and MySQL/MariaDB
+I.T Inventory system with PHP and MySQL/MariaDB\
 
-Directory Structure
-it_inventory_system/
+## Directory Structure\
+it_inventory_system\
 ├── index.php                   # Login and sign-up page.\
 ├── logout.php                  # logout and end session.\
 ├── dashboard.php               # User dashboard.\
@@ -26,13 +26,13 @@ it_inventory_system/
 ├── print_network_equipmment.php      # Print page for network equipments inventory. User can print the result from search and filter.\
 ├── view_logs.php               # Activities like login, sign-up, logout, add, edit, delete and other will log. admin user able to view all activity record.\
 ├── includes/   
-│   ├── db.php                  # Database connection.\
-│   ├── auth.php                # Authentication and session management.\
-│   └── functions.php           # Utility functions (e.g., sorting).\
+    ├── db.php                  # Database connection.\
+    ├── auth.php                # Authentication and session management.\
+    └── functions.php           # Utility functions (e.g., sorting).\
 ├── css/
-│   └── style.css               # Stylesheet for UI.\
+    └── style.css               # Stylesheet for UI.\
 ├── js/
-│   └── script.js               # Optional JavaScript for interactivity.\
+    └── script.js               # Optional JavaScript for interactivity.\
 ├── vendor/                     # Composer dependencies (e.g., PhpSpreadsheet).\
 
 CRUD stands for:\
