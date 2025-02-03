@@ -1,8 +1,9 @@
 <?php
+session_start();
 require_once 'includes/auth.php';
 require_once 'includes/db.php';
 
-// Check if user is logged in
+// Redirect if not logged in
 if (!isset($_SESSION['user_id'])) {
     header('Location: index.php');
     exit();
@@ -12,77 +13,82 @@ if (!isset($_SESSION['user_id'])) {
 $username = $_SESSION['username'];
 $access_permission = $_SESSION['access_permission'];
 
-// Quick Stats (Fetch counts)
-$total_devices_query = "SELECT COUNT(*) AS total FROM (
-    SELECT id FROM computers UNION ALL
-    SELECT id FROM printers UNION ALL
-    SELECT id FROM tablets UNION ALL
-    SELECT id FROM phones UNION ALL
-    SELECT id FROM servers UNION ALL
-    SELECT id FROM network_equipment UNION ALL
-    SELECT id FROM accessories
-) AS all_devices";
-$total_devices_stmt = $pdo->query($total_devices_query);
-$total_devices = $total_devices_stmt->fetchColumn();
+// Function to log activity
+function log_activity($pdo, $user_id, $username, $action) {
+    $stmt = $pdo->prepare("INSERT INTO logs (user_id, username, action) VALUES (?, ?, ?)");
+    $stmt->execute([$user_id, $username, $action]);
+}
 
-$total_assigned_query = "SELECT COUNT(*) AS total FROM (
-    SELECT id FROM computers WHERE status = 'Assigned' UNION ALL
-    SELECT id FROM printers WHERE status = 'Assigned' UNION ALL
-    SELECT id FROM tablets WHERE status = 'Assigned' UNION ALL
-    SELECT id FROM phones WHERE status = 'Assigned' UNION ALL
-    SELECT id FROM servers WHERE status = 'Assigned' UNION ALL
-    SELECT id FROM network_equipment WHERE status = 'Assigned' UNION ALL
-    SELECT id FROM accessories WHERE status = 'Assigned'
-) AS assigned_devices";
-$total_assigned_stmt = $pdo->query($total_assigned_query);
-$total_assigned = $total_assigned_stmt->fetchColumn();
+// Log dashboard access
+// log_activity($pdo, $_SESSION['user_id'], $_SESSION['username'], "Accessed Dashboard");
 
-$total_available_query = "SELECT COUNT(*) AS total FROM (
-    SELECT id FROM computers WHERE status = 'Available' UNION ALL
-    SELECT id FROM printers WHERE status = 'Available' UNION ALL
-    SELECT id FROM tablets WHERE status = 'Available' UNION ALL
-    SELECT id FROM phones WHERE status = 'Available' UNION ALL
-    SELECT id FROM servers WHERE status = 'Available' UNION ALL
-    SELECT id FROM network_equipment WHERE status = 'Available' UNION ALL
-    SELECT id FROM accessories WHERE status = 'Available'
-) AS available_devices";
-$total_available_stmt = $pdo->query($total_available_query);
-$total_available = $total_available_stmt->fetchColumn();
+// Optimized query to get device stats for each category
+$query = "SELECT category, 
+                 COUNT(*) AS total, 
+                 SUM(CASE WHEN status = 'Assigned' THEN 1 ELSE 0 END) AS total_assigned, 
+                 SUM(CASE WHEN status = 'Available' THEN 1 ELSE 0 END) AS total_available
+          FROM (
+              SELECT 'Computers' AS category, status FROM computers
+              UNION ALL
+              SELECT 'Printers', status FROM printers
+              UNION ALL
+              SELECT 'Phones', status FROM phones
+              UNION ALL
+              SELECT 'Tablets', status FROM tablets
+              UNION ALL
+              SELECT 'Servers', status FROM servers
+              UNION ALL
+              SELECT 'Network Equipment', status FROM network_equipment
+              UNION ALL
+              SELECT 'Accessories', status FROM accessories
+          ) AS inventory
+          GROUP BY category";
 
-$total_users_query = "SELECT COUNT(*) FROM users";
-$total_users_stmt = $pdo->query($total_users_query);
-$total_users = $total_users_stmt->fetchColumn();
+$stmt = $pdo->query($query);
+$stats = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>Dashboard | I.T. Inventory System</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
-        /* Responsive Dashboard Styles */
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
         }
-        h1, h2, h3, p {
-            margin: 10px 0;
+        .container {
+            max-width: 900px;
+            margin: auto;
         }
-        a {
+        h1, h2 {
+            text-align: center;
+        }
+        .btn {
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
             text-decoration: none;
-            color: #007BFF;
+            cursor: pointer;
+            display: inline-block;
+            text-align: center;
+            margin-top: 10px;
         }
-        a:hover {
-            text-decoration: underline;
+        .btn:hover {
+            background-color: #0056b3;
         }
         .stats-container {
             display: flex;
             flex-wrap: wrap;
+            justify-content: space-around;
             gap: 20px;
             margin-bottom: 20px;
         }
         .stat-box {
-            flex: 1 1 200px;
+            flex: 1 1 250px;
             padding: 20px;
             border: 1px solid #ccc;
             border-radius: 5px;
@@ -99,87 +105,79 @@ $total_users = $total_users_stmt->fetchColumn();
             color: #007BFF;
             font-weight: bold;
         }
-        .dashboard-section {
-            margin-bottom: 20px;
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        ul li {
+            margin-bottom: 10px;
         }
         @media screen and (max-width: 768px) {
             .stats-container {
                 flex-direction: column;
             }
-            .stat-box {
-                width: 100%;
-            }
         }
     </style>
 </head>
 <body>
+<div class="container">
     <h1>Welcome, <?= htmlspecialchars($username) ?>!</h1>
-    <a href="logout.php">Logout</a> |
-    <a href="profile.php">My Profile</a>
+    <a class="btn" href="logout.php">Logout</a>
+    <a class="btn" href="profile.php">My Profile</a>
+    
     <hr>
 
     <!-- Quick Stats Section -->
     <h2>Quick Stats</h2>
     <div class="stats-container">
-        <div class="stat-box">
-            <h3>Total Devices</h3>
-            <p><?= $total_devices ?></p>
-        </div>
-        <div class="stat-box">
-            <h3>Assigned Devices</h3>
-            <p><?= $total_assigned ?></p>
-        </div>
-        <div class="stat-box">
-            <h3>Available Devices</h3>
-            <p><?= $total_available ?></p>
-        </div>
-        <div class="stat-box">
-            <h3>Total Users</h3>
-            <p><?= $total_users ?></p>
-        </div>
+        <?php foreach ($stats as $stat): ?>
+            <div class="stat-box">
+                <h3><?= htmlspecialchars($stat['category']) ?></h3>
+                <p>Total: <?= $stat['total'] ?></p>
+                <p>Assigned: <?= $stat['total_assigned'] ?></p>
+                <p>Available: <?= $stat['total_available'] ?></p>
+            </div>
+        <?php endforeach; ?>
     </div>
 
     <!-- Admin Panel -->
     <?php if ($access_permission === 'admin'): ?>
-        <div class="dashboard-section">
-            <h2>Admin Panel</h2>
-            <ul>
-                <li><a href="manage_users.php">Manage Users</a></li>
-                <li><a href="admin_import_export.php">Import/Export Data</a></li>
-                <li><a href="view_logs.php">Activitiy Log</a></li>                
-            </ul>
-        </div>
+        <h2>Admin Panel</h2>
+        <ul>
+            <a class="btn" href="manage_users.php">Manage Users</a>
+            <a class="btn" href="admin_import_export.php">Import/Export Data</a>
+            <a class="btn" href="view_logs.php">Activity Log</a>
+        </ul>
     <?php endif; ?>
 
     <!-- Inventory Management -->
-    <div class="dashboard-section">
-        <h2>Inventory Management</h2>
-        <ul>
-            <?php if (in_array($access_permission, ['view', 'add', 'edit', 'admin'])): ?>
-                <li><a href="manage_computers.php">Manage Computers</a></li>
-                <li><a href="manage_printers.php">Manage Printers</a></li>
-                <li><a href="manage_tablets.php">Manage Tablets</a></li>
-                <li><a href="manage_phones.php">Manage Phones</a></li>
-                <li><a href="manage_servers.php">Manage Servers</a></li>
-                <li><a href="manage_network_equipment.php">Manage Network Equipments</a></li>
-                <li><a href="manage_accessories.php">Manage Accessories</a></li>
-            <?php else: ?>
-                <p>You don't have access to manage inventory.</p>
-            <?php endif; ?>
-        </ul>
-    </div>
+    <h2>Inventory Management</h2>
+    <ul>
+        <?php if (in_array($access_permission, ['view', 'add', 'edit', 'admin'])): ?>
+            <a class="btn" href="manage_computers.php">Manage Computers</a>
+            <a class="btn" href="manage_printers.php">Manage Printers</a>
+            <a class="btn" href="manage_tablets.php">Manage Tablets</a>
+            <a class="btn" href="manage_phones.php">Manage Phones</a>
+            <a class="btn" href="manage_servers.php">Manage Servers</a>
+            <a class="btn" href="manage_network_equipment.php">Manage Network Equipments</a>
+            <a class="btn" href="manage_accessories.php">Manage Accessories</a>
+        <?php else: ?>
+            <p>You don't have access to manage inventory.</p>
+        <?php endif; ?>
+    </ul>
 
     <!-- User Role Information -->
-    <div class="dashboard-section">
-        <?php if ($access_permission === 'view'): ?>
-            <p><strong>Note:</strong> You have view-only access to the inventory.</p>
-        <?php elseif ($access_permission === 'add'): ?>
-            <p><strong>Note:</strong> You can add new inventory items but cannot edit or delete them.</p>
-        <?php elseif ($access_permission === 'edit'): ?>
-            <p><strong>Note:</strong> You can edit and delete inventory items.</p>
-        <?php elseif ($access_permission === 'admin'): ?>
-            <p><strong>Note:</strong> You have full admin access, including user management and inventory control.</p>
-        <?php endif; ?>
-    </div>
+    <p><strong>Note:</strong> 
+        <?php
+        $roles = [
+            'view' => 'You have view-only access to the inventory.',
+            'add' => 'You can add new inventory items but cannot edit or delete them.',
+            'edit' => 'You can edit and delete inventory items.',
+            'admin' => 'You have full admin access, including user management and inventory control.'
+        ];
+        echo $roles[$access_permission] ?? 'Unknown role';
+        ?>
+    </p>
+</div>
 </body>
 </html>

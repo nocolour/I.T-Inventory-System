@@ -183,7 +183,6 @@ if (isset($_GET['edit_id']) && in_array($permission, ['edit', 'admin'])) {
 <body>
     <h1>Manage Computers</h1>
     <a href="dashboard.php"><button>Back to Dashboard</button></a> 
-    <a href="profile.php"><button>Profile</button></a> 
     <a href="logout.php"><button>Logout</button></a>
     <hr>
 

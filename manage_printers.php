@@ -182,9 +182,8 @@ if (isset($_GET['edit_id']) && in_array($permission, ['edit', 'admin'])) {
 </head>
 <body>
     <h1>Manage Printers</h1>
-    <a href="dashboard.php">Back to Dashboard</a> | 
-    <a href="profile.php">Profile</a> | 
-    <a href="logout.php">Logout</a>
+    <a href="dashboard.php"><button>Back to Dashboard</button></a>
+    <a href="logout.php"><button>Logout</button></a>
     <hr>
 
     <!-- Search -->
@@ -195,7 +194,7 @@ if (isset($_GET['edit_id']) && in_array($permission, ['edit', 'admin'])) {
     </form>
 	<!-- Print Table -->
     <h2>Print Printers Inventory</h2>
-    <a href="print_printers.php" target="_blank">Print Inventory</a>
+    <a href="print_printers.php" target="_blank"><button>Print Inventory</button></a>
     <hr>
 
     <!-- Add New Printer -->
@@ -289,7 +288,7 @@ if (isset($_GET['edit_id']) && in_array($permission, ['edit', 'admin'])) {
                     <?php endforeach; ?>
                     <td>
                         <?php if (in_array($permission, ['edit', 'admin'])): ?>
-                            <a href="?edit_id=<?= $printer['id'] ?>">Edit</a>
+                            <a href="?edit_id=<?= $printer['id'] ?>"><button>Edit</button></a>
                             <form method="POST" style="display: inline;">
                                 <input type="hidden" name="id" value="<?= $printer['id'] ?>">
                                 <button type="submit" name="delete_printer">Delete</button>

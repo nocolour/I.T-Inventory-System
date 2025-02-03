@@ -1,11 +1,22 @@
 <?php
-// Start the session
 session_start();
+require_once 'includes/db.php';
 
-// Destroy the session
-session_unset(); // Unset all session variables
-session_destroy(); // Destroy the session itself
+// Function to log activity
+function log_activity($pdo, $user_id, $username, $action) {
+    $stmt = $pdo->prepare("INSERT INTO logs (user_id, username, action) VALUES (?, ?, ?)");
+    $stmt->execute([$user_id, $username, $action]);
+}
 
-// Redirect to the login page
-header('Location: index.php');
+// Log the logout action before destroying session
+if (isset($_SESSION['user_id']) && isset($_SESSION['username'])) {
+    log_activity($pdo, $_SESSION['user_id'], $_SESSION['username'], "User logged out");
+}
+
+// Destroy all session data
+session_unset();
+session_destroy();
+
+// Redirect to login page
+header("Location: index.php");
 exit();

@@ -161,7 +161,13 @@ $accessories = $stmt->fetchAll(PDO::FETCH_ASSOC);
             actions.style.display = '';
             pagination.style.display = '';
         }
+
+        // Close the Page
+        function closePage() {
+            window.close();
+        }
     </script>
+
 </head>
 <body>
     <h1>Accessories Inventory</h1>
@@ -196,6 +202,9 @@ $accessories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         <!-- Print Button -->
         <button class="print-btn" onclick="printTable()">Print</button>
+
+        <button class="print-btn" onclick="closePage()">Close Page</button>
+
     </div>
 
     <!-- accessories Table -->

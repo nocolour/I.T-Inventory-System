@@ -52,7 +52,7 @@ $total_pages = ceil($total_logs / $items_per_page);
 </head>
 <body>
     <h1>Activity Log</h1>
-    <a href="dashboard.php">Back to Dashboard</a> 
+    <a href="dashboard.php"><button>Back to Dashboard</button></a> 
     <br><br>
     <table>
         <thead>

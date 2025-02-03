@@ -161,6 +161,12 @@ $computers = $stmt->fetchAll(PDO::FETCH_ASSOC);
             actions.style.display = '';
             pagination.style.display = '';
         }
+
+        // Close the Page
+        function closePage() {
+            window.close();
+        }
+
     </script>
 </head>
 <body>
@@ -168,7 +174,6 @@ $computers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <!-- Actions: Search, Column Filter, and Reset -->
     <div class="actions">
-        <!-- Search Input -->
         <input type="text" id="searchInput" placeholder="Search..." onkeyup="searchTable()">
         <button class="reset-btn" onclick="resetSearch()">Reset Search</button>
 
@@ -196,6 +201,8 @@ $computers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         <!-- Print Button -->
         <button class="print-btn" onclick="printTable()">Print</button>
+
+        <button class="print-btn" onclick="closePage()">Close Page</button>        
     </div>
 
     <!-- Computers Table -->

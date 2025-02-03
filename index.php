@@ -1,23 +1,39 @@
 <?php
-require_once 'includes/auth.php';
+// Enable error reporting for debugging
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+session_start();
 require_once 'includes/db.php';
+
+// Function to log activity
+function log_activity($pdo, $user_id, $username, $action) {
+    try {
+        $stmt = $pdo->prepare("INSERT INTO logs (user_id, username, action) VALUES (?, ?, ?)");
+        $stmt->execute([$user_id, $username, $action]);
+    } catch (PDOException $e) {
+        error_log("Log Activity Failed: " . $e->getMessage()); // Debugging log
+    }
+}
 
 // Check if an admin account exists
 $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE access_permission = 'admin'");
 $stmt->execute();
 $admin_count = $stmt->fetchColumn();
 
-// Create Admin Account Logic
+// Handle Admin Account Creation
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_admin'])) {
-    $username = $_POST['username'];
+    $username = trim($_POST['username']);
     $password = password_hash($_POST['password'], PASSWORD_BCRYPT);
-    $email = $_POST['email'];
-    $staff_id = $_POST['staff_id'];
-    $contact_number = $_POST['contact_number'];
+    $email = trim($_POST['email']);
+    $staff_id = trim($_POST['staff_id']);
+    $contact_number = trim($_POST['contact_number']);
 
-    // Check if username or email already exists
-    $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ? OR email = ?");
+    // Check for duplicate username or email
+    $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
     $stmt->execute([$username, $email]);
+
     if ($stmt->rowCount() > 0) {
         $error = "Username or email already exists!";
     } else {
@@ -25,41 +41,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_admin'])) {
         $stmt = $pdo->prepare("INSERT INTO users (username, password, email, staff_id, contact_number, access_permission) 
                                VALUES (?, ?, ?, ?, ?, 'admin')");
         $stmt->execute([$username, $password, $email, $staff_id, $contact_number]);
+
+        // Log admin creation
+        $admin_id = $pdo->lastInsertId();
+        log_activity($pdo, $admin_id, $username, "Created Admin Account");
+
         $success = "Admin account created successfully! Please log in.";
     }
 }
 
-// Login Logic
+// Handle User Login
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+    $username = trim($_POST['username']);
+    $password = trim($_POST['password']);
 
     $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
     $stmt->execute([$username]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($user && password_verify($password, $user['password'])) {
+        // Start session and store user info
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
         $_SESSION['access_permission'] = $user['access_permission'];
+
+        // Log successful login
+        log_activity($pdo, $user['id'], $user['username'], "User logged in successfully");
+
         header('Location: dashboard.php');
         exit();
     } else {
+        // Log failed login attempt
+        log_activity($pdo, 0, $username, "Failed login attempt");
         $error = "Invalid username or password!";
     }
 }
 
-// Sign-Up Logic
+// Handle User Sign-Up
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['signup'])) {
-    $username = $_POST['username'];
+    $username = trim($_POST['username']);
     $password = password_hash($_POST['password'], PASSWORD_BCRYPT);
-    $email = $_POST['email'];
-    $staff_id = $_POST['staff_id'];
-    $contact_number = $_POST['contact_number'];
+    $email = trim($_POST['email']);
+    $staff_id = trim($_POST['staff_id']);
+    $contact_number = trim($_POST['contact_number']);
 
     // Check if username or email already exists
-    $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ? OR email = ?");
+    $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
     $stmt->execute([$username, $email]);
+
     if ($stmt->rowCount() > 0) {
         $error = "Username or email already exists!";
     } else {
@@ -67,6 +96,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['signup'])) {
         $stmt = $pdo->prepare("INSERT INTO users (username, password, email, staff_id, contact_number, access_permission) 
                                VALUES (?, ?, ?, ?, ?, 'view')");
         $stmt->execute([$username, $password, $email, $staff_id, $contact_number]);
+
+        // Log new user registration
+        $user_id = $pdo->lastInsertId();
+        log_activity($pdo, $user_id, $username, "New user account created");
+
         $success = "Account created successfully! Please log in.";
     }
 }
