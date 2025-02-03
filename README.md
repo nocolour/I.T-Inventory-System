@@ -26,19 +26,19 @@ it_inventory_system\
 ├── print_network_equipmment.php      # Print page for network equipments inventory. User can print the result from search and filter.\
 ├── view_logs.php               # Activities like login, sign-up, logout, add, edit, delete and other will log. admin user able to view all activity record.\
 ├── includes/\ 
-    ├── db.php                  # Database connection.\
-    ├── auth.php                # Authentication and session management.\
-    └── functions.php           # Utility functions (e.g., sorting).\
+>    ├── db.php                  # Database connection.\
+>    ├── auth.php                # Authentication and session management.\
+>    └── functions.php           # Utility functions (e.g., sorting).\
 ├── css/\
-    └── style.css               # Stylesheet for UI.\
+>    └── style.css               # Stylesheet for UI.\
 ├── js/\
-    └── script.js               # Optional JavaScript for interactivity.\
+>    └── script.js               # Optional JavaScript for interactivity.\
 ├── vendor/                     # Composer dependencies (e.g., PhpSpreadsheet).
 
 CRUD stands for:\
 ✅ C - Create (Add new records to a database)\
 ✅ R - Read (Retrieve or display records from a database)\
 ✅ U - Update (Modify existing records in a database)\
-✅ D - Delete (Remove records from a database)\
+✅ D - Delete (Remove records from a database)
 
 When system don't have admin account detected, login page will ask for create admin account. Every user account have it own permission and session. Only admin user can access manage users page, admin allow to create, edit, delete and reset password any user account. Admin have full control for all access, user with view permission only can view the inventory record, user with add permission can create new record for inventory, user with edit permission can add, edit and delete inventory record.
