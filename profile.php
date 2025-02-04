@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <h1>User Profile</h1>
-    <a href="dashboard.php">Back to Dashboard</a>
+    <a href="dashboard.php"><button>Back to Dashboard</button></a>
     <hr>
 
     <?php if (isset($success)): ?>

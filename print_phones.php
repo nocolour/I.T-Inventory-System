@@ -7,7 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Pagination Logic
-$limit = 10; // Number of rows per page
+$limit = 18; // Number of rows per page
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $start = ($page - 1) * $limit;
 
@@ -251,11 +251,30 @@ $phones = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </tbody>
     </table>
 
-    <!-- Pagination Links -->
+    <!-- Pagination Logic -->
+    <?php
+    $max_pages_to_display = 20;
+    $start_page = max(1, $page - floor($max_pages_to_display / 2));
+    $end_page = min($total_pages, $start_page + $max_pages_to_display - 1);
+    ?>
+
+    <!-- Pagination UI -->
     <div class="pagination">
-        <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-            <a href="?page=<?= $i ?>" class="<?= $i === $page ? 'active' : '' ?>"><?= $i ?></a>
+        <?php if ($page > 1): ?>
+            <a href="?page=1">First</a>
+            <a href="?page=<?= $page - 1 ?>">Previous</a>
+        <?php endif; ?>
+
+        <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
+            <a href="?page=<?= $i ?>" class="<?= ($i === $page) ? 'active' : '' ?>">
+                <?= $i ?>
+            </a>
         <?php endfor; ?>
+
+        <?php if ($page < $total_pages): ?>
+            <a href="?page=<?= $page + 1 ?>">Next</a>
+            <a href="?page=<?= $total_pages ?>">Last</a>
+        <?php endif; ?>
     </div>
 </body>
 </html>

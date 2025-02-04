@@ -19,10 +19,7 @@ function log_activity($pdo, $user_id, $username, $action) {
     $stmt->execute([$user_id, $username, $action]);
 }
 
-// Log dashboard access
-// log_activity($pdo, $_SESSION['user_id'], $_SESSION['username'], "Accessed Dashboard");
-
-// Optimized query to get device stats for each category
+// Query to get device stats for each category
 $query = "SELECT category, 
                  COUNT(*) AS total, 
                  SUM(CASE WHEN status = 'Assigned' THEN 1 ELSE 0 END) AS total_assigned, 
@@ -56,65 +53,79 @@ $stats = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
         }
         .container {
-            max-width: 900px;
+            max-width: 1200px;
             margin: auto;
+            padding: 20px;
+            background: white;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
         }
         h1, h2 {
             text-align: center;
+            margin-bottom: 15px;
+        }
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
         }
         .btn {
-            padding: 10px 15px;
+            padding: 12px 18px;
             background-color: #007BFF;
             color: white;
             border: none;
             border-radius: 5px;
             text-decoration: none;
             cursor: pointer;
-            display: inline-block;
             text-align: center;
-            margin-top: 10px;
+            font-size: 14px;
+            transition: 0.3s;
         }
         .btn:hover {
             background-color: #0056b3;
         }
         .stats-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-around;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             margin-bottom: 20px;
         }
         .stat-box {
-            flex: 1 1 250px;
             padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            text-align: center;
-            background: #f9f9f9;
+            background: #fff;
+            border-radius: 8px;
             box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
         }
         .stat-box h3 {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             color: #333;
+            margin-bottom: 10px;
         }
         .stat-box p {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             color: #007BFF;
             font-weight: bold;
         }
         ul {
-            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
             padding: 0;
         }
         ul li {
-            margin-bottom: 10px;
+            list-style: none;
         }
         @media screen and (max-width: 768px) {
             .stats-container {
-                flex-direction: column;
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -122,9 +133,13 @@ $stats = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <body>
 <div class="container">
     <h1>Welcome, <?= htmlspecialchars($username) ?>!</h1>
-    <a class="btn" href="logout.php">Logout</a>
-    <a class="btn" href="profile.php">My Profile</a>
     
+    <!-- Navigation Buttons -->
+    <div class="btn-container">
+        <a class="btn" href="logout.php">Logout</a>
+        <a class="btn" href="profile.php">My Profile</a>
+    </div>
+
     <hr>
 
     <!-- Quick Stats Section -->
@@ -144,9 +159,9 @@ $stats = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <?php if ($access_permission === 'admin'): ?>
         <h2>Admin Panel</h2>
         <ul>
-            <a class="btn" href="manage_users.php">Manage Users</a>
-            <a class="btn" href="admin_import_export.php">Import/Export Data</a>
-            <a class="btn" href="view_logs.php">Activity Log</a>
+            <li><a class="btn" href="manage_users.php">Manage Users</a></li>
+            <li><a class="btn" href="admin_import_export.php">Import/Export Data</a></li>
+            <li><a class="btn" href="view_logs.php">Activity Log</a></li>
         </ul>
     <?php endif; ?>
 
@@ -154,13 +169,13 @@ $stats = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <h2>Inventory Management</h2>
     <ul>
         <?php if (in_array($access_permission, ['view', 'add', 'edit', 'admin'])): ?>
-            <a class="btn" href="manage_computers.php">Manage Computers</a>
-            <a class="btn" href="manage_printers.php">Manage Printers</a>
-            <a class="btn" href="manage_tablets.php">Manage Tablets</a>
-            <a class="btn" href="manage_phones.php">Manage Phones</a>
-            <a class="btn" href="manage_servers.php">Manage Servers</a>
-            <a class="btn" href="manage_network_equipment.php">Manage Network Equipments</a>
-            <a class="btn" href="manage_accessories.php">Manage Accessories</a>
+            <li><a class="btn" href="manage_computers.php">Manage Computers</a></li>
+            <li><a class="btn" href="manage_printers.php">Manage Printers</a></li>
+            <li><a class="btn" href="manage_tablets.php">Manage Tablets</a></li>
+            <li><a class="btn" href="manage_phones.php">Manage Phones</a></li>
+            <li><a class="btn" href="manage_servers.php">Manage Servers</a></li>
+            <li><a class="btn" href="manage_network_equipment.php">Manage Network Equipment</a></li>
+            <li><a class="btn" href="manage_accessories.php">Manage Accessories</a></li>
         <?php else: ?>
             <p>You don't have access to manage inventory.</p>
         <?php endif; ?>

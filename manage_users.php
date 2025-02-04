@@ -22,7 +22,18 @@ $query = "SELECT * FROM users WHERE 1=1";
 if (!empty($search)) {
     $query .= " AND (username LIKE :search OR email LIKE :search OR staff_id LIKE :search OR access_permission LIKE :search)";
 }
-$query .= " ORDER BY id ASC LIMIT :limit OFFSET :offset";
+$sort_column = $_GET['sort'] ?? 'id';
+$sort_direction = $_GET['dir'] ?? 'ASC';
+
+// Ensure valid sorting columns to prevent SQL injection
+$valid_columns = ['id', 'username', 'email', 'staff_id', 'contact_number', 'access_permission'];
+if (!in_array($sort_column, $valid_columns)) {
+    $sort_column = 'id';
+}
+$sort_direction = strtoupper($sort_direction) === 'DESC' ? 'DESC' : 'ASC';
+
+$query .= " ORDER BY $sort_column $sort_direction LIMIT :limit OFFSET :offset";
+
 $stmt = $pdo->prepare($query);
 if (!empty($search)) {
     $stmt->bindValue(':search', "%$search%", PDO::PARAM_STR);
@@ -212,8 +223,9 @@ if (isset($_GET['edit_id'])) {
     <form method="GET" style="margin-bottom: 20px;">
         <input type="text" name="search" placeholder="Search by username, email, or staff ID..." value="<?= htmlspecialchars($search) ?>">
         <button type="submit">Search</button>
-        <a href="manage_users.php"><button>Reset</button></a>
+        <button type="button" onclick="window.location.href='manage_users.php'">Reset</button> <!-- ✅ Fix: Clears search -->
     </form>
+
     
     <!-- Add or Edit User -->
     <?php if ($edit_user): ?>
@@ -233,6 +245,7 @@ if (isset($_GET['edit_id'])) {
                 <option value="admin" <?= $edit_user['access_permission'] === 'admin' ? 'selected' : '' ?>>Admin</option>
             </select>
             <button type="submit" name="edit_user">Update User</button>
+            <button onclick="history.back()">Cancel</button>
         </form>
     <?php else: ?>
         <h2>Add New User</h2>
@@ -270,12 +283,12 @@ if (isset($_GET['edit_id'])) {
      <table>
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Staff ID</th>
-                <th>Contact Number</th>
-                <th>Access Permission</th>
+                <th><a href="?search=<?= urlencode($search) ?>&sort=id&dir=<?= $sort_column === 'id' && $sort_direction === 'ASC' ? 'DESC' : 'ASC' ?>">ID</a></th>
+                <th><a href="?search=<?= urlencode($search) ?>&sort=username&dir=<?= $sort_column === 'username' && $sort_direction === 'ASC' ? 'DESC' : 'ASC' ?>">Username</a></th>
+                <th><a href="?search=<?= urlencode($search) ?>&sort=email&dir=<?= $sort_column === 'email' && $sort_direction === 'ASC' ? 'DESC' : 'ASC' ?>">Email</a></th>
+                <th><a href="?search=<?= urlencode($search) ?>&sort=staff_id&dir=<?= $sort_column === 'staff_id' && $sort_direction === 'ASC' ? 'DESC' : 'ASC' ?>">Staff ID</a></th>
+                <th><a href="?search=<?= urlencode($search) ?>&sort=contact_number&dir=<?= $sort_column === 'contact_number' && $sort_direction === 'ASC' ? 'DESC' : 'ASC' ?>">Contact Number</a></th>
+                <th><a href="?search=<?= urlencode($search) ?>&sort=access_permission&dir=<?= $sort_column === 'access_permission' && $sort_direction === 'ASC' ? 'DESC' : 'ASC' ?>">Access Permission</a></th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -311,18 +324,32 @@ if (isset($_GET['edit_id'])) {
         </tbody>
     </table>
     <br><br>               
-    <!-- Pagination -->
+    <!-- Pagination Logic -->
+    <?php
+    $max_pages_to_display = 20;
+    $start_page = max(1, $page - floor($max_pages_to_display / 2));
+    $end_page = min($total_pages, $start_page + $max_pages_to_display - 1);
+    ?>
+
+    <!-- Pagination UI -->
     <div class="pagination">
         <?php if ($page > 1): ?>
-            <a href="?page=<?= $page - 1 ?>&search=<?= htmlspecialchars($search) ?>">Previous</a>
+            <a href="?page=1&search=<?= urlencode($search) ?>">First</a>
+            <a href="?page=<?= $page - 1 ?>&search=<?= urlencode($search) ?>">Previous</a>
         <?php endif; ?>
-        <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-            <a href="?page=<?= $i ?>&search=<?= htmlspecialchars($search) ?>" class="<?= $i === $page ? 'active' : '' ?>"><?= $i ?></a>
+
+        <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
+            <a href="?page=<?= $i ?>&search=<?= urlencode($search) ?>" class="<?= ($i === $page) ? 'active' : '' ?>">
+                <?= $i ?>
+            </a>
         <?php endfor; ?>
+
         <?php if ($page < $total_pages): ?>
-            <a href="?page=<?= $page + 1 ?>&search=<?= htmlspecialchars($search) ?>">Next</a>
+            <a href="?page=<?= $page + 1 ?>&search=<?= urlencode($search) ?>">Next</a>
+            <a href="?page=<?= $total_pages ?>&search=<?= urlencode($search) ?>">Last</a>
         <?php endif; ?>
     </div>
+
     <br>
 </body>
 </html>

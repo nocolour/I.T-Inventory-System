@@ -190,7 +190,7 @@ if (isset($_GET['edit_id']) && in_array($permission, ['edit', 'admin'])) {
     <form method="GET" style="margin-bottom: 20px;">
         <input type="text" name="search" placeholder="Search by any column..." value="<?= htmlspecialchars($search) ?>">
         <button type="submit">Search</button>
-        <a href="manage_phones.php">Reset</a>
+        <button type="button" onclick="window.location.href='manage_phones.php'">Reset</button> <!-- ✅ Fix: Clears search -->
     </form>
 	<!-- Print Table -->
     <h2>Print Phones Inventory</h2>
@@ -305,16 +305,29 @@ if (isset($_GET['edit_id']) && in_array($permission, ['edit', 'admin'])) {
         </tbody>
     </table>
      <br><br>           
-    <!-- Pagination -->
+<!-- Pagination Logic -->
+<?php
+    $max_pages_to_display = 20;
+    $start_page = max(1, $page - floor($max_pages_to_display / 2));
+    $end_page = min($total_pages, $start_page + $max_pages_to_display - 1);
+    ?>
+
+    <!-- Pagination UI -->
     <div class="pagination">
         <?php if ($page > 1): ?>
-            <a href="?page=<?= $page - 1 ?>&search=<?= htmlspecialchars($search) ?>&sort=<?= htmlspecialchars($sort_column) ?>&dir=<?= htmlspecialchars($sort_direction) ?>">Previous</a>
+            <a href="?page=1&search=<?= urlencode($search) ?>&sort=<?= urlencode($sort_column) ?>&dir=<?= urlencode($sort_direction) ?>">First</a>
+            <a href="?page=<?= $page - 1 ?>&search=<?= urlencode($search) ?>&sort=<?= urlencode($sort_column) ?>&dir=<?= urlencode($sort_direction) ?>">Previous</a>
         <?php endif; ?>
-        <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-            <a href="?page=<?= $i ?>&search=<?= htmlspecialchars($search) ?>&sort=<?= htmlspecialchars($sort_column) ?>&dir=<?= htmlspecialchars($sort_direction) ?>" class="<?= $i === $page ? 'active' : '' ?>"><?= $i ?></a>
+
+        <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
+            <a href="?page=<?= $i ?>&search=<?= urlencode($search) ?>&sort=<?= urlencode($sort_column) ?>&dir=<?= urlencode($sort_direction) ?>" class="<?= ($i === $page) ? 'active' : '' ?>">
+                <?= $i ?>
+            </a>
         <?php endfor; ?>
+
         <?php if ($page < $total_pages): ?>
-            <a href="?page=<?= $page + 1 ?>&search=<?= htmlspecialchars($search) ?>&sort=<?= htmlspecialchars($sort_column) ?>&dir=<?= htmlspecialchars($sort_direction) ?>">Next</a>
+            <a href="?page=<?= $page + 1 ?>&search=<?= urlencode($search) ?>&sort=<?= urlencode($sort_column) ?>&dir=<?= urlencode($sort_direction) ?>">Next</a>
+            <a href="?page=<?= $total_pages ?>&search=<?= urlencode($search) ?>&sort=<?= urlencode($sort_column) ?>&dir=<?= urlencode($sort_direction) ?>">Last</a>
         <?php endif; ?>
     </div>
     <br>
