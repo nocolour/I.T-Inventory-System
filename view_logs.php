@@ -2,6 +2,35 @@
 require_once 'includes/auth.php';
 require_once 'includes/db.php';
 
+// Function to log actions
+function log_action($pdo, $user_id, $username, $action) {
+    $stmt = $pdo->prepare("INSERT INTO logs (user_id, username, action) VALUES (?, ?, ?)");
+    $stmt->execute([$user_id, $username, $action]);
+}
+
+// Check if user is admin before allowing log deletion
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['clear_logs'])) {
+    if ($_SESSION['access_permission'] === 'admin') {
+        // Delete logs older than 7 days
+        $stmt = $pdo->prepare("DELETE FROM logs WHERE timestamp < NOW() - INTERVAL 7 DAY");
+        $stmt->execute();
+
+        // Log this action
+        log_action($pdo, $_SESSION['user_id'], $_SESSION['username'], "Cleared logs older than 7 days");
+
+        $_SESSION['success'] = "Logs older than 7 days have been cleared.";
+        header("Location: view_logs.php");
+        exit();
+    } else {
+        $_SESSION['error'] = "Only admins can clear logs.";
+        header("Location: view_logs.php");
+        exit();
+    }
+}
+
+// Search functionality
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+
 // Search functionality
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
@@ -49,7 +78,7 @@ $end_page = min($total_pages, $start_page + $max_pages_to_display - 1);
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Activity Log | I.T. Inventory</title>
+    <title>Activities Log | I.T. Inventory</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
         table {
@@ -98,6 +127,86 @@ $end_page = min($total_pages, $start_page + $max_pages_to_display - 1);
         .print-button:hover {
             background-color: #218838;
         }
+
+        .clear-logs-button {
+            padding: 10px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .clear-logs-button:hover {
+            background-color: #c82333;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .left-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .right-buttons {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dashboard-button, .print-button, .logout-button, .clear-logs-button {
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .dashboard-button {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .print-button {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .logout-button {
+            background-color: #ff9800;
+            color: white;
+        }
+
+        .clear-logs-button {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .dashboard-button:hover {
+            background-color: #0056b3;
+        }
+
+        .print-button:hover {
+            background-color: #218838;
+        }
+
+        .logout-button:hover {
+            background-color: #e68900;
+        }
+
+        .clear-logs-button:hover {
+            background-color: #c82333;
+        }
+
+        .clear-logs-form {
+            display: inline-block;
+        }
+
+        
     </style>
     <script>
         function printLogs() {
@@ -111,10 +220,20 @@ $end_page = min($total_pages, $start_page + $max_pages_to_display - 1);
     </script>
 </head>
 <body>
-    <h1>Activity Log</h1>
-    <button class="print-button" onclick="window.location.href='dashboard.php'">Back to Dashboard</button>
-    <button class="print-button" onclick="printLogs()">Print Logs</button>
-    <br><br>
+    <h1>Activities Log</h1>
+    <!-- Button Container -->
+    <div class="button-container">
+        <div class="left-buttons">
+            <button class="dashboard-button" onclick="window.location.href='dashboard.php'">Back to Dashboard</button>
+            <button class="print-button" onclick="printLogs()">Print Logs</button>
+        </div>
+
+        <div class="right-buttons">
+            <button class="dashboard-button" onclick="window.location.href='logout.php'">Logout</button>
+           
+        </div>
+    </div>
+    
 
     <!-- Search Form -->
     <div class="search-container">
@@ -124,6 +243,16 @@ $end_page = min($total_pages, $start_page + $max_pages_to_display - 1);
             <a href="view_logs.php"><button type="button">Reset</button></a>
         </form>
     </div>
+    <div class="right-buttons">
+            <?php if ($_SESSION['access_permission'] === 'admin'): ?>
+                <form method="POST" class="clear-logs-form">
+                    <button type="submit" name="clear_logs" class="clear-logs-button"
+                        onclick="return confirm('Are you sure you want to delete logs older than 7 days? This action cannot be undone.')">
+                        Clear Logs Older Than 7 Days
+                    </button>
+                </form>
+            <?php endif; ?>
+        </div>    
 
     <!-- Logs Table -->
     <table id="log-table">
@@ -154,8 +283,22 @@ $end_page = min($total_pages, $start_page + $max_pages_to_display - 1);
         </tbody>
     </table>
 
+        <!-- Display Success/Error Messages -->
+        <?php if (isset($_SESSION['success'])): ?>
+        <div class="success"><?= htmlspecialchars($_SESSION['success']) ?></div>
+        <?php unset($_SESSION['success']); ?>
+    <?php endif; ?>
+
+    <?php if (isset($_SESSION['error'])): ?>
+        <div class="error"><?= htmlspecialchars($_SESSION['error']) ?></div>
+        <?php unset($_SESSION['error']); ?>
+    <?php endif; ?>
+
+    <!-- Clear Logs Button (Visible to Admins Only) -->
+
+
     <br><br>
-    
+
     <!-- Pagination -->
     <div class="pagination">
         <?php if ($page > 1): ?>
